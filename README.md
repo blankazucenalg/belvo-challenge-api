@@ -37,7 +37,10 @@ Belvo Challenge API. This project was built with Flask and Python 3.7. It uses S
 
    ```json
    // Response
-   [{"account":"C00099","balance":1738.87,"total_inflow":2500.72,"total_outflow":-761.85},{"account":"S00012","balance":150.72,"total_inflow":150.72,"total_outflow":0.0}]
+   [
+      {"account":"C00099", "balance":1738.87, "total_inflow":2500.72," total_outflow":-761.85},
+      {"account":"S00012", "balance":150.72, "total_inflow":150.72, "total_outflow":0.0}
+   ]
    ```
 
 5. You can get a user's transactions summary by categories in `GET /user/<user_id>/transactions_by_category`
@@ -61,6 +64,7 @@ pip install .
 # Create database schema (empty database)
 export FLASK_APP=belvo_transactions
 export FLASK_ENV=development
+# or use a .env file with this variables
 flask init-db
 
 # Testing with pytest, after installation
