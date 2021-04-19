@@ -1,0 +1,23 @@
+DROP TABLE IF EXISTS user;
+
+DROP TABLE IF EXISTS user_transaction;
+
+CREATE TABLE user(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  age INTEGER,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_transaction(
+  reference TEXT PRIMARY KEY,
+  account TEXT NOT NULL,
+  date DATE NOT NULL,
+  amount FLOAT NOT NULL,
+  type TEXT NOT NULL,
+  category TEXT DEFAULT `uncategorized`,
+  user_id INTEGER NOT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES user(id)
+);
