@@ -104,6 +104,8 @@ def get_transactions_summary_from_user(user_id, date_from, date_to):
     df = pd.DataFrame(summary)
     data = df.pivot_table(index='account', columns='type',
                           values='amount', fill_value=0)
+    data = data.rename(
+        columns={'inflow': 'total_inflow', 'outflow': 'total_outflow'})
     data['account'] = data.index
     return json.loads(data.to_json(orient="records"))
 
