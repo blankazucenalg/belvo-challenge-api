@@ -1,0 +1,16 @@
+version: '3'
+services:
+  api:
+    build: .
+    image: belvo-transactions:latest
+    env_file:
+      - .env
+    environment:
+      - FLASK_APP=belvo-transactions
+      - FLASK_ENV=development
+    command: python /belvo-transactions/run.py
+    ports:
+      - 5000:5000
+    working_dir: /belvo-transactions
+    volumes:
+      - .:/belvo-transactions:cached
