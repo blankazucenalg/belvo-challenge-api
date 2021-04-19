@@ -99,7 +99,29 @@ def get_transactions_summary_from_user(user_id):
     # SQLite desn't support pivot table so this implementation uses dataframe transformation
     summary = [dict(r) for r in fetch]
     df = pd.DataFrame(summary)
-    data = df.pivot(index='account', columns='type',
-                    values='amount')
+    data = df.pivot_table(index='account', columns='type',
+                          values='amount', fill_value=0)
     data['account'] = data.index
     return json.loads(data.to_json(orient="records"))
+
+
+def get_transactions_by_category_from_user(user_id):
+    """
+    Return summary from user's transactions by category
+
+    """
+    db = get_db()
+    fetch = db.execute("SELECT sum(amount) as amount, type, category FROM user_transaction WHERE user_id = ? GROUP BY type, category",
+                       (user_id,)).fetchall()
+    # data transformation
+    summary = [dict(r) for r in fetch]
+    df = pd.DataFrame(summary)
+    data = df.pivot(index='type', columns='category',
+                    values='amount')
+    return clean_dictionary(json.loads(data.to_json(orient='index')))
+
+
+def clean_dictionary(d):
+    if not isinstance(d, dict):
+        return d
+    return dict((key, clean_dictionary(value)) for key, value in d.items() if value is not None)

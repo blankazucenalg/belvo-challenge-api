@@ -3,7 +3,7 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 from belvo_transactions.connection import get_db
-from belvo_transactions.resources.transaction import get_transactions_summary_from_user
+from belvo_transactions.resources.transaction import get_transactions_summary_from_user, get_transactions_by_category_from_user
 
 bp = Blueprint('user', __name__)
 
@@ -66,6 +66,15 @@ def transactions_summary(user_id):
     """
     transactions_summary = get_transactions_summary_from_user(user_id)
     return jsonify(transactions_summary)
+
+
+@bp.route('/user/<user_id>/transactions_by_category', methods=['GET'])
+def transactions_by_category(user_id):
+    """
+    Return user's transactions by_category
+    """
+    transactions_by_category = get_transactions_by_category_from_user(user_id)
+    return jsonify(transactions_by_category)
 
 
 def create_user(user):
