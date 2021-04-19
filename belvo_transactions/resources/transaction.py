@@ -10,7 +10,7 @@ bp = Blueprint('transaction', __name__)
 
 
 @bp.route('/transaction', methods=('GET', 'POST'))
-def transaction():
+def transaction_list():
     if request.method == 'POST':
         """
         Create new transactions
@@ -28,10 +28,19 @@ def transaction():
     return jsonify([dict(r) for r in transactions])
 
 
+@bp.route('/transaction/<reference>', methods=['GET'])
+def transaction(reference):
+    tx = fetch_transaction(reference)
+    if tx is None:
+        abort(404, f'Transaction with reference `{reference}` not found.')
+    return jsonify(dict(tx))
+
+
 def filter_transactions(transaction_list):
     filtered_transactions = []
     uniqueness_check = {}
     for t in transaction_list:
+        # Check transaction is valid and is not duplicated (in db and bulk)
         if is_valid(t) and t['reference'] not in uniqueness_check:
             filtered_transactions.append(t)
             uniqueness_check[t['reference']] = True
@@ -76,5 +85,21 @@ def create_transactions_bulk(transactions):
 
 
 def fetch_transaction(reference):
+    return get_db().execute('SELECT * FROM user_transaction WHERE reference = ?', (reference, )).fetchone()
+
+
+def get_transactions_summary_from_user(user_id):
+    """
+    Return summary from user's accounts
+
+    """
     db = get_db()
-    return db.execute('SELECT * FROM user_transaction WHERE reference = ?', (reference, )).fetchone()
+    fetch = db.execute("SELECT account, sum(amount) as amount, type FROM user_transaction WHERE user_id = ? GROUP BY account, type UNION SELECT account, sum(amount) as amount, 'balance' as type FROM user_transaction WHERE user_id = ? GROUP BY account",
+                       (user_id, user_id)).fetchall()
+    # SQLite desn't support pivot table so this implementation uses dataframe transformation
+    summary = [dict(r) for r in fetch]
+    df = pd.DataFrame(summary)
+    data = df.pivot(index='account', columns='type',
+                    values='amount')
+    data['account'] = data.index
+    return json.loads(data.to_json(orient="records"))

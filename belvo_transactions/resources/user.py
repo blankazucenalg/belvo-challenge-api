@@ -3,6 +3,7 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 from belvo_transactions.connection import get_db
+from belvo_transactions.resources.transaction import get_transactions_summary_from_user
 
 bp = Blueprint('user', __name__)
 
@@ -53,7 +54,18 @@ def user(user_id):
             return jsonify(dict(inserted_value))
 
     user = fetch_user(user_id)
+    if user is None:
+        abort(404, 'User not found')
     return jsonify(dict(user))
+
+
+@bp.route('/user/<user_id>/transactions_summary', methods=['GET'])
+def transactions_summary(user_id):
+    """
+    Return user's transactions summary
+    """
+    transactions_summary = get_transactions_summary_from_user(user_id)
+    return jsonify(transactions_summary)
 
 
 def create_user(user):
