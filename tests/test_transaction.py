@@ -87,6 +87,13 @@ def test_transactions_summary_filter_date(client):
     assert b'[{"account":"C00099","balance":2350.0,"total_inflow":2500.72,"total_outflow":-150.72},{"account":"S00012","balance":150.72,"total_inflow":150.72,"total_outflow":0.0}]' in response.data
 
 
+def test_transactions_summary_filter_invalid_date(client):
+    client.post('/transaction', json=transactions_data)
+    response = client.get('/user/1/transactions_summary',
+                          query_string={'date_from': 'nodate', 'date_to': 'nodate'})
+    assert response.status_code == 400
+
+
 def test_transactions_by_categories(client):
     client.post('/transaction', json=transactions_data)
     response = client.get('/user/1/transactions_by_category')
