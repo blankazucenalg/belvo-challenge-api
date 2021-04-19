@@ -8,7 +8,7 @@ from belvo_transactions.resources.transaction import get_transactions_summary_fr
 bp = Blueprint('user', __name__)
 
 
-@bp.route('/user', methods=('GET', 'POST'))
+@bp.route('/user', methods=['GET', 'POST'])
 def user_list():
     """
     Return all users or create one
@@ -64,7 +64,10 @@ def transactions_summary(user_id):
     """
     Return user's transactions summary
     """
-    transactions_summary = get_transactions_summary_from_user(user_id)
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    transactions_summary = get_transactions_summary_from_user(
+        user_id, date_from, date_to)
     return jsonify(transactions_summary)
 
 

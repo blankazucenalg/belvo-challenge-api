@@ -88,14 +88,17 @@ def fetch_transaction(reference):
     return get_db().execute('SELECT * FROM user_transaction WHERE reference = ?', (reference, )).fetchone()
 
 
-def get_transactions_summary_from_user(user_id):
+def get_transactions_summary_from_user(user_id, date_from, date_to):
     """
     Return summary from user's accounts
 
     """
-    db = get_db()
-    fetch = db.execute("SELECT account, sum(amount) as amount, type FROM user_transaction WHERE user_id = ? GROUP BY account, type UNION SELECT account, sum(amount) as amount, 'balance' as type FROM user_transaction WHERE user_id = ? GROUP BY account",
-                       (user_id, user_id)).fetchall()
+    date_statement = ""
+    if date_from is not None and date_to is not None:
+        date_statement = f" AND date BETWEEN date('{date_from}') and date('{date_to}') "
+    statement = f"SELECT account, sum(amount) as amount, type FROM user_transaction WHERE user_id = {user_id} {date_statement} GROUP BY account, type UNION SELECT account, sum(amount) as amount, 'balance' as type FROM user_transaction WHERE user_id = {user_id} {date_statement} GROUP BY account"
+
+    fetch = get_db().execute(statement).fetchall()
     # SQLite desn't support pivot table so this implementation uses dataframe transformation
     summary = [dict(r) for r in fetch]
     df = pd.DataFrame(summary)
