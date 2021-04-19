@@ -1,0 +1,1 @@
+include belvo_transactions/connection/schema.sql
