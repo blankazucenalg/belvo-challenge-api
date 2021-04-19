@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_restful import Api
 from belvo_transactions import connection
+from belvo_transactions.resources import user, transaction
 
 
 def create_app(test_config=None):
@@ -27,5 +28,7 @@ def create_app(test_config=None):
         return 'It works!'
 
     connection.init_app(app)
+    app.register_blueprint(user.bp)
+    app.register_blueprint(transaction.bp)
 
     return app
