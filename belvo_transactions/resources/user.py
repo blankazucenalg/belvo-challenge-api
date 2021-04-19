@@ -6,7 +6,7 @@ from werkzeug.exceptions import abort
 from validate_email import validate_email
 from belvo_transactions.connection import get_db
 from belvo_transactions.resources.transaction import get_transactions_summary_from_user, get_transactions_by_category_from_user
-from belvo_transactions.utils import validate_string
+from belvo_transactions.utils import validate_string, validate_date
 
 bp = Blueprint('user', __name__)
 
@@ -62,19 +62,24 @@ def user(user_id):
     return jsonify(dict(user))
 
 
-@ bp.route('/user/<user_id>/transactions_summary', methods=['GET'])
+@bp.route('/user/<user_id>/transactions_summary', methods=['GET'])
 def transactions_summary(user_id):
     """
     Return user's transactions summary
     """
     date_from = request.args.get('date_from')
     date_to = request.args.get('date_to')
+    if date_from is not None and not validate_date(date_from):
+        return abort(400, 'date_from must be a valid date in iso format YYYY-MM-DD.')
+    if date_to is not None and not validate_date(date_to):
+        return abort(400, 'date_to must be a valid date in iso format YYYY-MM-DD.')
+
     transactions_summary = get_transactions_summary_from_user(
         user_id, date_from, date_to)
     return jsonify(transactions_summary)
 
 
-@ bp.route('/user/<user_id>/transactions_by_category', methods=['GET'])
+@bp.route('/user/<user_id>/transactions_by_category', methods=['GET'])
 def transactions_by_category(user_id):
     """
     Return user's transactions by_category
