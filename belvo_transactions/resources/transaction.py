@@ -1,10 +1,12 @@
+import json
+
+import pandas as pd
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify
+    Blueprint, request, jsonify
 )
 from werkzeug.exceptions import abort
+
 from belvo_transactions.connection import get_db
-import pandas as pd
-import json
 
 bp = Blueprint('transaction', __name__)
 
@@ -21,7 +23,9 @@ def transaction_list():
             transactions = [transactions]
         valid_bulk = filter_transactions(transactions)
 
-        create_transactions_bulk(valid_bulk)
+        if len(valid_bulk) > 0:
+            create_transactions_bulk(valid_bulk)
+        return jsonify({'ok': len(valid_bulk), 'inserted': valid_bulk})
 
     db = get_db()
     transactions = db.execute('SELECT * FROM user_transaction').fetchall()
@@ -85,7 +89,7 @@ def create_transactions_bulk(transactions):
 
 
 def fetch_transaction(reference):
-    return get_db().execute('SELECT * FROM user_transaction WHERE reference = ?', (reference, )).fetchone()
+    return get_db().execute('SELECT * FROM user_transaction WHERE reference = ?', (reference,)).fetchone()
 
 
 def get_transactions_summary_from_user(user_id, date_from, date_to):
@@ -99,7 +103,7 @@ def get_transactions_summary_from_user(user_id, date_from, date_to):
     statement = f"SELECT account, sum(amount) as amount, type FROM user_transaction WHERE user_id = {user_id} {date_statement} GROUP BY account, type UNION SELECT account, sum(amount) as amount, 'balance' as type FROM user_transaction WHERE user_id = {user_id} {date_statement} GROUP BY account"
 
     fetch = get_db().execute(statement).fetchall()
-    # SQLite desn't support pivot table so this implementation uses dataframe transformation
+    # SQLite doesn't support pivot table so this implementation uses dataframe transformation
     summary = [dict(r) for r in fetch]
     df = pd.DataFrame(summary)
     data = df.pivot_table(index='account', columns='type',
@@ -113,11 +117,11 @@ def get_transactions_summary_from_user(user_id, date_from, date_to):
 def get_transactions_by_category_from_user(user_id):
     """
     Return summary from user's transactions by category
-
     """
     db = get_db()
-    fetch = db.execute("SELECT sum(amount) as amount, type, category FROM user_transaction WHERE user_id = ? GROUP BY type, category",
-                       (user_id,)).fetchall()
+    fetch = db.execute(
+        "SELECT sum(amount) as amount, type, category FROM user_transaction WHERE user_id = ? GROUP BY type, category",
+        (user_id,)).fetchall()
     # data transformation
     summary = [dict(r) for r in fetch]
     df = pd.DataFrame(summary)

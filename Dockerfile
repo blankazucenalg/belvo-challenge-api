@@ -9,4 +9,4 @@ COPY run.py /belvo-transactions
 ADD . /belvo-transactions
 
 EXPOSE 5000
-CMD ["python", "account-transactions/run.py"]
+CMD ["python", "/belvo-transactions/run.py"]

@@ -1,7 +1,8 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for, jsonify
+    Blueprint, request, jsonify
 )
 from werkzeug.exceptions import abort
+
 from belvo_transactions.connection import get_db
 from belvo_transactions.resources.transaction import get_transactions_summary_from_user, get_transactions_by_category_from_user
 
@@ -89,18 +90,19 @@ def create_user(user):
 
 def get_by_email(email):
     return get_db().execute(
-        'SELECT * FROM user WHERE email = ?', (email, )).fetchone()
+        'SELECT * FROM user WHERE email = ?', (email,)).fetchone()
 
 
 def fetch_user(email):
     return get_db().execute(
-        'SELECT * FROM user WHERE id = ?', (email, )).fetchone()
+        'SELECT * FROM user WHERE id = ?', (email,)).fetchone()
 
 
 def update_user(user_id, user):
     db = get_db()
     db.execute(
-        'UPDATE TABLE user SET name=?, email=?, age=? WHERE id = ?', (user['name'], user['email'], user['age'], user_id))
+        'UPDATE TABLE user SET name=?, email=?, age=? WHERE id = ?',
+        (user['name'], user['email'], user['age'], user_id))
     return db.commit()
 
 

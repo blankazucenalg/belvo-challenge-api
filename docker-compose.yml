@@ -3,8 +3,6 @@ services:
   api:
     build: .
     image: belvo-transactions:latest
-    env_file:
-      - .env
     environment:
       - FLASK_APP=belvo-transactions
       - FLASK_ENV=development

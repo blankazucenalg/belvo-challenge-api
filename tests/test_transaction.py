@@ -1,5 +1,3 @@
-import json
-
 transactions_data = [
     {
         "reference": "000051",

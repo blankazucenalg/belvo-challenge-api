@@ -1,6 +1,7 @@
 import os
+
 from flask import Flask
-from flask_restful import Api
+
 from belvo_transactions import connection
 from belvo_transactions.resources import user, transaction
 
