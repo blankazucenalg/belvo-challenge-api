@@ -3,8 +3,10 @@ from flask import (
 )
 from werkzeug.exceptions import abort
 
+from validate_email import validate_email
 from belvo_transactions.connection import get_db
 from belvo_transactions.resources.transaction import get_transactions_summary_from_user, get_transactions_by_category_from_user
+from belvo_transactions.utils import validate_string
 
 bp = Blueprint('user', __name__)
 
@@ -19,9 +21,9 @@ def user_list():
         Create a user
         """
         user = request.json
-        if 'name' not in user:
+        if 'name' not in user or not validate_string(user['name'], 3):
             abort(400, 'Name is required.')
-        elif 'email' not in user:
+        elif 'email' not in user or not validate_email(user['email']):
             abort(400, 'Email is required.')
         elif get_by_email(user['email']) is not None:
             abort(409, 'There is already an user with that email.')
@@ -44,9 +46,9 @@ def user(user_id):
         Update a user
         """
         user = request.json
-        if 'name' not in user:
+        if 'name' not in user or not validate_string(user['name'], 3):
             abort(400, 'Name is required.')
-        elif 'email' not in user:
+        elif 'email' not in user or not validate_email(user['email']):
             abort(400, 'Email is required.')
 
         else:
@@ -60,7 +62,7 @@ def user(user_id):
     return jsonify(dict(user))
 
 
-@bp.route('/user/<user_id>/transactions_summary', methods=['GET'])
+@ bp.route('/user/<user_id>/transactions_summary', methods=['GET'])
 def transactions_summary(user_id):
     """
     Return user's transactions summary
@@ -72,7 +74,7 @@ def transactions_summary(user_id):
     return jsonify(transactions_summary)
 
 
-@bp.route('/user/<user_id>/transactions_by_category', methods=['GET'])
+@ bp.route('/user/<user_id>/transactions_by_category', methods=['GET'])
 def transactions_by_category(user_id):
     """
     Return user's transactions by_category
