@@ -80,7 +80,7 @@ def is_valid(transaction):
     elif fetch_transaction(transaction["reference"]) is not None:
         return False, 'There is already a transaction with that reference.'
     else:
-        return True
+        return True, None
 
 
 def create_transactions_bulk(transactions):
@@ -112,13 +112,16 @@ def get_transactions_summary_from_user(user_id, date_from, date_to):
     fetch = get_db().execute(statement).fetchall()
     # SQLite doesn't support pivot table so this implementation uses dataframe transformation
     summary = [dict(r) for r in fetch]
-    df = pd.DataFrame(summary)
-    data = df.pivot_table(index='account', columns='type',
-                          values='amount', fill_value=0)
-    data = data.rename(
-        columns={'inflow': 'total_inflow', 'outflow': 'total_outflow'})
-    data['account'] = data.index
-    return json.loads(data.to_json(orient="records"))
+    if len(summary) > 0:
+        df = pd.DataFrame(summary)
+        data = df.pivot_table(index='account', columns='type',
+                              values='amount', fill_value=0)
+        data = data.rename(
+            columns={'inflow': 'total_inflow', 'outflow': 'total_outflow'})
+        data['account'] = data.index
+        return json.loads(data.to_json(orient="records"))
+    else:
+        return summary
 
 
 def get_transactions_by_category_from_user(user_id):
@@ -131,10 +134,13 @@ def get_transactions_by_category_from_user(user_id):
         (user_id,)).fetchall()
     # data transformation
     summary = [dict(r) for r in fetch]
-    df = pd.DataFrame(summary)
-    data = df.pivot(index='type', columns='category',
-                    values='amount')
-    return clean_dictionary(json.loads(data.to_json(orient='index')))
+    if len(summary) > 0:
+        df = pd.DataFrame(summary)
+        data = df.pivot(index='type', columns='category',
+                        values='amount')
+        return clean_dictionary(json.loads(data.to_json(orient='index')))
+    else:
+        return summary
 
 
 def clean_dictionary(d):
