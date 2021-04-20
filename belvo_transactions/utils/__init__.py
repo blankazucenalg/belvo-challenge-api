@@ -11,3 +11,11 @@ def validate_date(iso_date_string: str):
     except:
         return False
     return True
+
+
+def validate_number_from_string(number: str):
+    try:
+        float(number)
+    except:
+        return False
+    return True

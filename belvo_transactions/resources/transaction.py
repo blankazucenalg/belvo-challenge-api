@@ -7,6 +7,7 @@ from flask import (
 from werkzeug.exceptions import abort
 
 from belvo_transactions.connection import get_db
+from belvo_transactions.utils import validate_string, validate_date, validate_number_from_string
 
 bp = Blueprint('transaction', __name__)
 
@@ -18,14 +19,13 @@ def transaction_list():
         Create new transactions
         """
         transactions = request.json
-        print(transactions)
         if isinstance(transactions, dict):
             transactions = [transactions]
-        valid_bulk = filter_transactions(transactions)
+        valid_bulk, invalid_tx = filter_transactions(transactions)
 
         if len(valid_bulk) > 0:
             create_transactions_bulk(valid_bulk)
-        return jsonify({'ok': len(valid_bulk), 'inserted': valid_bulk})
+        return jsonify({'ok': len(valid_bulk), 'inserted': valid_bulk, 'not_inserted': invalid_tx})
 
     db = get_db()
     transactions = db.execute('SELECT * FROM user_transaction').fetchall()
@@ -42,37 +42,44 @@ def transaction(reference):
 
 def filter_transactions(transaction_list):
     filtered_transactions = []
+    invalid_transactions = []
     uniqueness_check = {}
     for t in transaction_list:
         # Check transaction is valid and is not duplicated (in db and bulk)
-        if is_valid(t) and t['reference'] not in uniqueness_check:
+        tx_is_valid, tx_error = is_valid(t)
+        if tx_is_valid and t['reference'] not in uniqueness_check:
             filtered_transactions.append(t)
             uniqueness_check[t['reference']] = True
-    return filtered_transactions
+        else:
+            invalid_transactions.append(
+                {'transaction': t, 'cause': tx_error})
+    return filtered_transactions, invalid_transactions
 
 
 def is_valid(transaction):
-    if 'reference' not in transaction:
-        return False
-    elif 'account' not in transaction:
-        return False
-    elif 'date' not in transaction:
-        return False
+    if 'reference' not in transaction or not validate_string(transaction['reference'], 1):
+        return False, '´reference´ is required and cannot be empty.'
+    elif 'account' not in transaction or not validate_string(transaction['account'], 1):
+        return False, '`account` is required and cannot be empty.'
+    elif 'date' not in transaction or not validate_string(transaction['date'], 1):
+        return False, '`date` is required and cannot be empty.'
+    elif not validate_date(transaction['date']):
+        return False, '´date´ must be a valid iso date string YYYY-MM-DD'
     elif 'amount' not in transaction:
-        return False
+        return False, '`amount` is required.'
+    elif not validate_number_from_string(transaction['amount']):
+        return False, '`amount` should be a number.'
     elif 'type' not in transaction:
-        return False
+        return False, '`type` is required.'
+    elif transaction['type'] not in ['inflow', 'outflow']:
+        return False, '`type` must be `inflow` or `outflow`'
     elif 'category' not in transaction:
-        return False
+        return False, '`category` is required.'
     elif 'user_id' not in transaction:
-        return False
+        return False, '`user_id` is required.'
     elif fetch_transaction(transaction["reference"]) is not None:
-        return False
+        return False, 'There is already a transaction with that reference.'
     else:
-        try:
-            tmp = float(transaction['amount'])
-        except:
-            return False
         return True
 
 
