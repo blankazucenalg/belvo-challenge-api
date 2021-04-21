@@ -1,3 +1,5 @@
+import json
+
 transactions_data = [
     {
         "reference": "000051",
@@ -58,25 +60,22 @@ transactions_data = [
 
 def test_empty_db(client):
     response = client.get('/transaction')
-    assert b'[]' in response.data
+    assert [] == json.loads(response.data)
 
 
 def test_post_transactions(client):
-    mimetype = 'application/json'
-    headers = {
-        'Content-Type': mimetype,
-        'Accept': mimetype
-    }
     response = client.post('/transaction', json=transactions_data
                            )
     assert response.status_code == 200
+    assert json.loads(response.data)['ok'] == 5
 
 
 def test_transactions_summary(client):
     client.post('/transaction', json=transactions_data)
     response = client.get('/user/1/transactions_summary')
     assert response.status_code == 200
-    assert b'[{"account":"C00099","balance":1738.87,"total_inflow":2500.72,"total_outflow":-761.85},{"account":"S00012","balance":150.72,"total_inflow":150.72,"total_outflow":0.0}]' in response.data
+    assert [{"account": "C00099", "balance": 1738.87, "total_inflow": 2500.72, "total_outflow": -761.85}, {"account": "S00012", "balance": 150.72, "total_inflow": 150.72, "total_outflow": 0.0}] == json.loads(
+        response.data)
 
 
 def test_transactions_summary_filter_date(client):
@@ -84,7 +83,8 @@ def test_transactions_summary_filter_date(client):
     response = client.get('/user/1/transactions_summary',
                           query_string={'date_from': '2020-01-10', 'date_to': '2020-01-10'})
     assert response.status_code == 200
-    assert b'[{"account":"C00099","balance":2350.0,"total_inflow":2500.72,"total_outflow":-150.72},{"account":"S00012","balance":150.72,"total_inflow":150.72,"total_outflow":0.0}]' in response.data
+    assert [{"account": "C00099", "balance": 2350.0, "total_inflow": 2500.72, "total_outflow": -150.72},
+            {"account": "S00012", "balance": 150.72, "total_inflow": 150.72, "total_outflow": 0.0}] == json.loads(response.data)
 
 
 def test_transactions_summary_filter_invalid_date(client):
@@ -98,4 +98,5 @@ def test_transactions_by_categories(client):
     client.post('/transaction', json=transactions_data)
     response = client.get('/user/1/transactions_by_category')
     assert response.status_code == 200
-    assert b'{"inflow":{"salary":2500.72,"savings":150.72},"outflow":{"groceries":-51.13,"rent":-560.0,"transfer":-150.72}}' in response.data
+    assert {"inflow": {"salary": 2500.72, "savings": 150.72}, "outflow": {
+        "groceries": -51.13, "rent": -560.0, "transfer": -150.72}} == json.loads(response.data)
