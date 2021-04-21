@@ -47,10 +47,13 @@ def filter_transactions(transaction_list):
     for t in transaction_list:
         # Check transaction is valid and is not duplicated (in db and bulk)
         tx_is_valid, tx_error = is_valid(t)
-        if tx_is_valid and t['reference'] not in uniqueness_check:
+        tx_unique_in_bulk = t['reference'] not in uniqueness_check
+        if tx_is_valid and tx_unique_in_bulk:
             filtered_transactions.append(t)
             uniqueness_check[t['reference']] = True
         else:
+            if not tx_unique_in_bulk:
+                tx_error = 'Transaction was duplicated in request data.'
             invalid_transactions.append(
                 {'transaction': t, 'cause': tx_error})
     return filtered_transactions, invalid_transactions
