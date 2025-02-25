@@ -1,6 +1,6 @@
 # User Transactions API
 
-Belvo Challenge API. This project was built with Flask and Python 3.7. It uses SQLite for data persistence and pytest as testing suite.
+This project was built with Flask and Python 3.7. It uses SQLite for data persistence and pytest as testing suite.
 
 ## Documentation
 
@@ -62,7 +62,7 @@ virtualenv venv
 pip install .
 
 # Create database schema (empty database)
-export FLASK_APP=belvo_transactions
+export FLASK_APP=api_transactions
 export FLASK_ENV=development
 # or use a .env file with this variables
 flask init-db
